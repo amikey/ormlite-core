@@ -2434,45 +2434,23 @@ public class Account @{
 This allows us to construct queries using the password field name without having the renaming of a field in the future break
 our queries.  This should be done @emph{even} if the name of the field and the column name are the same.
 
-@cindex where
+@cindex where object
 @example
 // get our query builder from the DAO
 QueryBuilder<Account, String> queryBuilder =
-  accountDao.queryBuilder();
+    accountDao.queryBuilder();
 // the 'password' field must be equal to "qwerty"
 queryBuilder.where().eq(Account.PASSWORD_FIELD_NAME, "qwerty");
-// prepare our sql statement
-PreparedQuery<Account> preparedQuery = queryBuilder.prepare();
 // query for all accounts that have "qwerty" as a password
-List<Account> accountList = accountDao.query(preparedQuery);
+List<Account> accountList = queryBuilder.query();
 @end example
 
-@cindex prepared statement
+@cindex query method
+@cindex iterator method
 You get a @code{QueryBuilder} object from the @code{Dao.queryBuilder()} method, call methods on it to build your custom
-query, call @code{queryBuilder.prepare()} which returns a @code{PreparedQuery} object, and then pass the @code{PreparedQuery}
-to the DAO's @code{query} or @code{iterator} methods.
-
-As a short cut, you can also call the @code{prepare()} method on the @code{Where} object to do something like the following: 
-
-@example
-// query for all accounts that have that password
-List<Account> accountList =
-   accountDao.query(
-      accountDao.queryBuilder().where()
-         .eq(Account.PASSWORD_FIELD_NAME, "qwerty")
-         .prepare());
-@end example
-
-You can use another short cut to call @code{query()} or @code{iterator()} either on the @code{QueryBuilder} or @code{Where}
-objects.
-
-@example
-// query for all accounts that have that password
-List<Account> accountList =
-      accountDao.queryBuilder().where()
-         .eq(Account.PASSWORD_FIELD_NAME, "qwerty")
-         .query();
-@end example
+query, use the @code{where()} method and the resulting @code{Where} object to build your SQL @code{WHERE} statements,
+and then call the @code{query()} or @code{iterator()} methods on the @code{QueryBuilder} or @code{Where} objects
+to get results.
 
 @c ----------------------------------------------------------------
 @node Building Queries, Building Statements, QueryBuilder Basics, Statement Builder
@@ -2484,7 +2462,7 @@ as well for power users.  Simple queries can be done linearly:
 
 @example
 QueryBuilder<Account, String> queryBuilder =
-  accountDao.queryBuilder();
+    accountDao.queryBuilder();
 // get the WHERE object to build our query
 Where<Account, String> where = queryBuilder.where();
 // the name field must be equal to "foo"
@@ -2493,7 +2471,7 @@ where.eq(Account.NAME_FIELD_NAME, "foo");
 where.and();
 // the password field must be equal to "_secret"
 where.eq(Account.PASSWORD_FIELD_NAME, "_secret");
-PreparedQuery<Account> preparedQuery = queryBuilder.prepare();
+List<Account> accounts = queryBuilder.query();
 @end example
 
 The SQL query that will be generated from the above example will be approximately:
@@ -3375,6 +3353,7 @@ The @code{ormlite-android.jar} classes define the @code{AndroidLog} class which 
 logging.  This class makes calls to the @code{Log.d}, @code{Log.i}, @dots{} methods in the Android API.  To see the log output,
 you will need to use the @code{adb} utility to view the log output:
 
+@cindex adb shell
 @example
 adb logcat
 @end example
@@ -3430,6 +3409,25 @@ If you are trying to track operations performed to the database by ORMLite use:
 adb shell setprop log.tag.droidDatabaseConnection VERBOSE
 adb shell setprop log.tag.ndroidCompiledStatement VERBOSE
 @end example
+
+@cindex disable android logging
+@cindex android logging, disabling
+@cindex turn off android logging
+To turn off Android messages, from the @code{adb shell} you would do something like:
+
+@example
+adb shell setprop log.tag.ORMLite WARN
+@end example
+
+Programmatically, you can turn off the log messages by specifying in the file @code{/data/local.prop} something like the
+following:
+
+@example
+log.tag.ORMLite=WARN
+@end example
+
+For more information about Android log levels, you can see 
+@uref{http://stackoverflow.com/questions/2018263/android-logging/2019563#2019563, this stackoverflow page}.
 
 @c ----------------------------------------------------------------
 @node RuntimeExceptionDao, Upgrading Schema, Android Logging, Use With Android
